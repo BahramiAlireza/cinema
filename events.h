@@ -8,7 +8,7 @@ protected:
     bool standed, seated, allocated;
     const int seated_capacity = 200;
     const int standed_capacity = 300;
-    int year, month, day;
+    int year, month, day, tracking_code;
     string name;
 
 };
@@ -16,14 +16,10 @@ protected:
 
 class LiveMusic : protected Event
 {
-private:
-    int tracking_code;
-
 public:
     LiveMusic(string name, int year, int month, int day, int tracking_code);
-    string get_name(){ return this->name;}
-LiveMusic *next;
-
+    string m_n(){return this->name;}
+    LiveMusic *next;
 };
 
 
