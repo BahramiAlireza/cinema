@@ -1,18 +1,23 @@
-# include "events.h"
+#include <iostream>
+using namespace std;
+
 
 class Ticket
 {
-private:
-    int tracking_code, reservee_name, tracking_code, event_id, event_type;
+    
 
 public:
-    Ticket(int reservee_name, int event_id, int event_type);
+    int tracking_code;
+    string event_name, reservee_name;
+    char event_type;
 
-    Ticket *next;
+    Ticket(string, string, char);
+
+    Ticket *next = NULL;
 };
 
-Ticket::Ticket(int reservee_name, int event_id, int event_type){
+Ticket::Ticket(string reservee_name, string event_name, char event_type){
     this->reservee_name = reservee_name;
-    this->event_id = event_id;
+    this->event_name = event_name;
     this->event_type = event_type;
 }
