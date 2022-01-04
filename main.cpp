@@ -1,11 +1,13 @@
 #include <iostream>
-#include "events.h"
+#include "live_music.h"
+#include "validators.h"
 
 using namespace std;
 
 
 LiveMusic *live_music_head = NULL;
 LiveMusic *live_music_tail = NULL;
+
 
 
 void remove_data(string file_name)
@@ -32,11 +34,13 @@ void save_data()
 void read_events_data()
 {
     ifstream infile("events_data.txt");
-    char event_type;
+    char event_type, allocation;
     string event_name;
-    while (infile >> event_type >> event_name)
+
+    while (infile >> event_type >> event_name >> allocation)
     {
-        LiveMusic *obj = new LiveMusic(event_name);
+        event_type = event_type_validator(event_type);
+        LiveMusic *obj = new LiveMusic(event_name, allocation);
         if(event_type=='L')
         {
             if(live_music_head==NULL)
@@ -62,6 +66,7 @@ void read_tickets_data()
 
     while(infile >> event_type >> reservee_name >> event_name)
     {
+        event_type = event_type_validator(event_type);
         if(event_type=='L')
         {
             LiveMusic *iterator_ = live_music_head;
@@ -98,6 +103,8 @@ void get_details(char &command)
     cout << "Enter the type of event: L: live music | S: stand up comedy | F: film =>  ";
     cin >> event_type;
 
+    event_type = event_type_validator(event_type);
+
     while(iterator_ != NULL)
     {
         if(iterator_->get_name() == event_name)
@@ -119,6 +126,8 @@ void book_event(char event_type, char& command)
 
     LiveMusic *iterator_ = live_music_head;
 
+    event_type = event_type_validator(event_type);
+
     cout << "Enter the following:\n"\
             "Name of reservee: ";
     cin >> reservee_name;
@@ -130,11 +139,13 @@ void book_event(char event_type, char& command)
     {
         if(iterator_->get_name()==event_name)
         {
-
-            iterator_->add_ticket(reservee_name, event_name, event_type);
-            cout << "E: exit | B: book another event => ";
-            cin >> command;
-            return;
+            if(iterator_->is_available()==true)
+            {
+                iterator_->add_ticket(reservee_name, event_name, event_type);
+                cout << "E: exit | B: book another event => ";
+                cin >> command;
+                return;
+            }
         }
         iterator_ = iterator_->next;
     }
@@ -151,24 +162,28 @@ void book_event(char event_type, char& command)
 void create_live_music(char &command)
 {
     string name;
+    char allocation;
 
     cout << "Enter the following: \n"\
             "Event name: ";
     cin >> name;
+    
+    cout << "S: seated | s: standed => ";
+    cin >> allocation;
 
-    LiveMusic *obj = new LiveMusic(name);
+    LiveMusic *obj = new LiveMusic(name, allocation);
 
     if(live_music_head==NULL)
     {
         live_music_head = obj;
         live_music_tail = live_music_head;
-        cout<< live_music_head->get_name();
     }
     else
     {
         live_music_tail->next = obj;
         live_music_tail = obj;
     }
+    
     cout << "E: exit | C: create another event => ";
     cin>>command;
 }
@@ -187,7 +202,7 @@ void cancel_book(char &command)
     cout << "Enter the type of event: L: live music | S: stand up comedy | F: film =>  ";
     cin >> event_type;
 
-
+    event_type = event_type_validator(event_type);
 
 
     LiveMusic *iterator_ = live_music_head;
