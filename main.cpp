@@ -8,6 +8,63 @@ LiveMusic *live_music_head = NULL;
 LiveMusic *live_music_tail = NULL;
 
 
+void read_events_data()
+{
+    ifstream infile("events_data.txt");
+    char event_type;
+    string event_name;
+    while (infile >> event_type >> event_name)
+    {
+        LiveMusic *obj = new LiveMusic(event_name);
+        if(event_type=='L')
+        {
+            if(live_music_head==NULL)
+            {
+                live_music_head = obj;
+                live_music_tail = live_music_head;
+                cout<< live_music_head->get_name();
+            }
+            else
+            {
+                live_music_tail->next = obj;
+                live_music_tail = obj;
+            }
+        } 
+    }
+}
+
+void read_tickets_data()
+{
+    ifstream infile("ticket_data.txt");
+    char event_type;
+    string reservee_name, event_name;
+
+    while(infile >> event_type >> reservee_name >> event_name)
+    {
+        if(event_type=='L')
+        {
+            LiveMusic *iterator_ = live_music_head;
+
+            bool found = false;
+
+            while(iterator_!=NULL)
+            {
+                if(iterator_->get_name()==event_name)
+                {
+                    iterator_->add_ticket(reservee_name, event_name, event_type);
+                    found = true;
+                }
+                iterator_ = iterator_->next;
+            }
+
+            if(found == false)
+            {
+                cout << "No matching events found!\n";
+            }
+        }
+    }
+}
+
 void get_details(char &command)
 {
     string event_name;
@@ -44,7 +101,7 @@ void book_event(char event_type, char& command)
     cout << "Enter the following:\n"\
             "Name of reservee: ";
     cin >> reservee_name;
-    
+
     cout << "Event name:";
     cin >> event_name;
 
@@ -69,7 +126,6 @@ void book_event(char event_type, char& command)
     cin>>command;
     
 }
-
 
 void create_live_music(char &command)
 {
@@ -214,7 +270,17 @@ void cli(){
         {
             get_details(command);
         }
-         
+        else if (command == 'D')
+        {
+            read_events_data();
+            read_tickets_data();
+        }
+        else if (command == 'S')
+        {
+            save_events();
+            save_tickets();
+        }
+        
     }
 }
 

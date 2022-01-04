@@ -13,6 +13,8 @@ protected:
     const int seated_capacity = 200;
     const int standed_capacity = 300;
     string name;
+public:
+    void read_data();
 
 };
 
@@ -124,25 +126,23 @@ string LiveMusic::get_details()
     result += "\n availability: ";
     if(this->is_available()==true)
     {
-        result+= "\n available";
+        result+= " available";
     }
     else
     {
-        result+= "\n not_available";
+        result+= " not_available";
     }
     result+= "\n type: ";
     if(this->seated)
     {
-        result+= "\n seated live music";
+        result+= "seated live music \n";
     }
     else
     {
-        result+= "\n standed live music";
+        result+= "standed live music \n";
     }
     
     return result;
-    
-    
 }
 
 int LiveMusic::tickets_count()
@@ -174,4 +174,3 @@ bool LiveMusic::is_available()
     }
     return false;
 }
-

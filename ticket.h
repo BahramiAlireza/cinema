@@ -7,7 +7,6 @@ class Ticket
     
 
 public:
-    int tracking_code;
     string event_name, reservee_name;
     char event_type;
 
