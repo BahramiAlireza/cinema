@@ -20,3 +20,4 @@ Ticket::Ticket(string reservee_name, string event_name, char event_type){
     this->event_name = event_name;
     this->event_type = event_type;
 }
+

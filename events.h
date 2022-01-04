@@ -42,6 +42,7 @@ public:
 
     int tickets_count();
 
+    void save();
 
     LiveMusic *next = NULL;
     Ticket *ticket_head, *ticket_tail;
@@ -173,4 +174,34 @@ bool LiveMusic::is_available()
             return true;
     }
     return false;
+}
+
+void LiveMusic::save()
+{
+    string filename("events_data.txt");
+    ofstream file_out;
+    string result;
+
+    file_out.open(filename, std::ios_base::app);
+    result += "L ";
+    result += this->name;
+    file_out << result << endl;
+
+    Ticket *iterator_ = ticket_head;
+    
+    while(iterator_!=NULL)
+    {
+        string ticket_filename("ticket_data.txt");
+        ofstream ticket_file_out;
+        string ticket_result;
+
+        ticket_file_out.open(ticket_filename, std::ios_base::app);
+        ticket_result += "L ";
+        ticket_result += iterator_->reservee_name;
+        ticket_result += " ";
+        ticket_result += this->name;
+        ticket_file_out << ticket_result << endl;
+
+        iterator_ = iterator_->next;
+    }
 }

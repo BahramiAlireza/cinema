@@ -8,6 +8,27 @@ LiveMusic *live_music_head = NULL;
 LiveMusic *live_music_tail = NULL;
 
 
+void remove_data(string file_name)
+{
+    ofstream ofs;
+    ofs.open(file_name, ofstream::out | ofstream::trunc);
+    ofs.close();
+}
+
+void save_data()
+{
+    remove_data("events_data.txt");
+    remove_data("ticket_data.txt");
+
+    LiveMusic *iterator_ = live_music_head;
+    
+    while(iterator_ != NULL)
+    {
+        iterator_->save();
+        iterator_ = iterator_->next;
+    }
+}
+
 void read_events_data()
 {
     ifstream infile("events_data.txt");
@@ -277,8 +298,7 @@ void cli(){
         }
         else if (command == 'S')
         {
-            save_events();
-            save_tickets();
+            save_data();
         }
         
     }
