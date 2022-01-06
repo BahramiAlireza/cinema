@@ -11,3 +11,6 @@ events.o: events.h ticket.h
  
 ticket.o: ticket.h
 	$(CC) -c ticket.h
+
+clean:
+	rm main.o ticket.h.gch events.h.gch 
