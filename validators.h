@@ -27,3 +27,13 @@ char event_type_validator(char event_type)
     
     throw invalid_argument("Got invalid event type");
 }
+
+int seat_number_validator(int seat_number)
+{
+    if(seat_number>0 && seat_number<200)
+    {
+        return seat_number;
+    }
+    
+    throw invalid_argument("Seat number must be between 1 and 200");
+}
