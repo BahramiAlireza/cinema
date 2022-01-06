@@ -14,8 +14,7 @@ protected:
     const int seated_capacity = 200;
     const int standed_capacity = 300;
     string name;
-public:
-    void read_data();
+
 };
 
 
@@ -64,9 +63,15 @@ LiveMusic::LiveMusic(string name, char allocation)
 
     if(allocation=='S')
     {
-        this->standed = true;
-        this->seated = false;
+        this->seated = true;
+        this->standed = false;
     }
+    else
+    {
+        this->seated = false;
+        this->standed = true;
+    }
+    
 
 }
 
@@ -143,14 +148,8 @@ string LiveMusic::get_details()
         result+= " not_available";
     }
     result+= "\n type: ";
-    if(this->seated)
-    {
-        result+= "seated live music \n";
-    }
-    else
-    {
-        result+= "standed live music \n";
-    }
+
+    result+= "standed live music \n";
     
     return result;
 }
@@ -367,7 +366,7 @@ string StandUpComedy::get_details()
         result+= " not_available";
     }
     result+= "\n type: ";
-    result+= " standed \n";
+    result+= " seated \n";
     
     result+="reservations: ";
     
@@ -454,9 +453,12 @@ void StandUpComedy::save()
 // FILM START
 class Film : protected Event
 {
+protected:
+    int dimension;
+
 public:
 
-    Film(string, char);
+    Film(string, char, int);
 
     string get_name()
     {
@@ -482,7 +484,7 @@ public:
 };
 
 
-Film::Film(string name, char allocation)
+Film::Film(string name, char allocation, int dimension)
 {
 
     this->name = name;
@@ -497,7 +499,7 @@ Film::Film(string name, char allocation)
         throw invalid_argument("Got standed event while stand up comedy is only seated");
     }
     
-
+    this->dimension = dimension;
 }
 
 void Film::add_ticket(string reservee_name, string event_name, char event_type, int seat_number)
@@ -589,9 +591,13 @@ string Film::get_details()
         result+= " not_available";
     }
     result+= "\n type: ";
-    result+= " standed \n";
+    result+= " seated \n";
+
+    result+="dimension:";
+    result+= to_string(this->dimension)+"D\n";
     
     result+="reservations: ";
+
     
     Ticket *iterator_ = this->ticket_head;
 

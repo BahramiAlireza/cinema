@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 #include "events.h"
-#include "validators.h"
 
 using namespace std;
 
@@ -12,13 +11,48 @@ LiveMusic *live_music_tail = NULL;
 StandUpComedy *stand_up_head = NULL;
 StandUpComedy *stand_up_tail = NULL;
 
+Film *film_head = NULL;
+Film *film_tail = NULL;
 
+// validators
+bool event_type_validator(char event_type)
+{
+    bool validated = false;
+
+    if(event_type=='L')
+    {
+     validated = true;   
+    }
+    else if (event_type=='S')
+    {
+     validated = true;   
+    }
+    else if (event_type=='F')
+    {
+     validated = true;   
+    }
+
+    return validated;
+}
+
+bool seat_number_validator(int seat_number)
+{
+    if(seat_number>=0 && seat_number<200)
+    {
+        return true;
+    }
+    
+    return false;
+}
+
+
+// cli
 void pause(string msg)
 {
     cout << "\n" << msg;
     cout << "\npress any key to continue...\n";
-    cin.ignore();
-    cin.get(); 
+    std::cin.ignore();
+    std::cin.get(); 
 }
 
 void remove_data(string file_name)
@@ -48,6 +82,14 @@ void save_data()
         stand_up_iterator_->save();
         stand_up_iterator_ = stand_up_iterator_->next;
     }
+
+    Film *film_iterator_ = film_head;
+    
+    while(film_iterator_ != NULL)
+    {
+        film_iterator_->save();
+        film_iterator_ = film_iterator_->next;
+    }
     pause("Data saved!");
 }
 
@@ -55,12 +97,22 @@ void read_events_data()
 {
     ifstream infile("events_data.txt");
     char event_type, allocation;
-    string event_name;
+    string event_name, dimension_string;
+    int dimension;
 
 
-    while (infile >> event_type >> event_name >> allocation)
+
+    while (infile >> event_type >> event_name >> allocation >> dimension_string)
     {
-        event_type = event_type_validator(event_type);
+        
+        while (event_type_validator(event_type) == false)
+        {
+            throw invalid_argument("wrong data (invalid event type found in data)");
+        }
+
+        dimension = stoi(dimension_string);
+
+   
         if(event_type == 'L')
         {
             LiveMusic *obj = new LiveMusic(event_name, allocation);
@@ -91,6 +143,26 @@ void read_events_data()
                 stand_up_tail = obj;
             }
         }
+        else if (event_type=='F')
+        {
+            if ( (dimension<=1 || dimension>3) || dimension==0)
+            {
+                throw invalid_argument("wrong data (invalid film dimension found in data)");
+            }
+        
+            Film *obj = new Film(event_name, allocation, dimension);
+
+            if(film_head==NULL)
+            {
+                film_head = obj;
+                film_tail = film_head;
+            }
+            else
+            {
+                film_tail->next = obj;
+                film_tail = obj;
+            }
+        }
     }
     pause("Events loaded successfully!\n");
 }
@@ -104,7 +176,16 @@ void read_tickets_data()
 
     while(infile >> event_type >> reservee_name >> event_name >> seat_number_string)
     {
-        event_type = event_type_validator(event_type);
+        while (event_type_validator(event_type) == false)
+        {
+            throw invalid_argument("wrong data (invalid event type found in data)");
+        }
+        seat_number = stoi(seat_number_string);
+
+        if(seat_number_validator(seat_number)==false)
+        {
+            throw invalid_argument("wrong data (invalid seat number in data)");
+        }
 
         if(event_type=='L')
         {
@@ -151,6 +232,30 @@ void read_tickets_data()
                 cout << "No matching events found!\n";
             }
         }
+        else if (event_type=='F')
+        {
+            Film *iterator_ = film_head;
+
+
+            bool found = false;
+            int seat_number = 0;
+
+            while(iterator_!=NULL)
+            {
+                if(iterator_->get_name()==event_name)
+                {
+                    seat_number = stoi(seat_number_string);
+                    iterator_->add_ticket(reservee_name, event_name, event_type, seat_number);
+                    found = true;
+                }
+                iterator_ = iterator_->next;
+            }
+
+            if(found == false)
+            {
+                cout << "No matching events found!\n";
+            }
+        }
         
     }
     pause("Reservations loaded successfully!\n");
@@ -162,22 +267,28 @@ void get_details(char &command)
     char event_type;
 
     cout << "Enter name of event: ";
-    cin >> event_name;
+    std::cin >> event_name;
 
     cout << "Enter the type of event: L: live music | S: stand up comedy | F: film =>  ";
-    cin >> event_type;
+    std::cin >> event_type;
+
+
+    while(event_type_validator(event_type)==false)
+    {
+        cout << "Enter the type of event: L: live music | S: stand up comedy | F: film =>  ";
+        std::cin >> event_type;
+    }
 
     if(event_type=='L')
     {
         LiveMusic *iterator_ = live_music_head;
-        event_type = event_type_validator(event_type);
 
         while(iterator_ != NULL)
         {
             if(iterator_->get_name() == event_name)
             {
                 cout << iterator_->get_details();
-                pause("---");
+                pause("*********");
                 return;
             }
             iterator_ = iterator_->next;
@@ -186,14 +297,28 @@ void get_details(char &command)
     else if(event_type=='S')
     {
         StandUpComedy *iterator_ = stand_up_head;
-        event_type = event_type_validator(event_type);
 
         while(iterator_ != NULL)
         {
             if(iterator_->get_name() == event_name)
             {
                 cout << iterator_->get_details();
-                pause("---");
+                pause("********");
+                return;
+            }
+            iterator_ = iterator_->next;
+        }
+    }
+    else if(event_type=='F')
+    {
+        Film *iterator_ = film_head;
+
+        while(iterator_ != NULL)
+        {
+            if(iterator_->get_name() == event_name)
+            {
+                cout << iterator_->get_details();
+                pause("********");
                 return;
             }
             iterator_ = iterator_->next;
@@ -207,15 +332,18 @@ void book_event(char event_type, char& command)
 {
     string event_name, reservee_name;
     
-
-    event_type = event_type_validator(event_type);
+    while(event_type_validator(event_type)==false)
+    {
+        cout << "Enter the type of event: L: live music | S: stand up comedy | F: film =>  ";
+        std::cin >> event_type;
+    }
 
     cout << "Enter the following:\n"\
             "Name of reservee: ";
-    cin >> reservee_name;
+    std::cin >> reservee_name;
 
     cout << "Event name:";
-    cin >> event_name;
+    std::cin >> event_name;
 
     if(event_type == 'L')
     {
@@ -228,8 +356,6 @@ void book_event(char event_type, char& command)
                 if(iterator_->is_available()==true)
                 {
                     iterator_->add_ticket(reservee_name, event_name, event_type);
-                    cout << "E: exit | B: book another event => ";
-                    cin >> command;
                     return;
                 }
             }
@@ -237,7 +363,7 @@ void book_event(char event_type, char& command)
         }
         if(iterator_ == NULL)
         {
-            cout << "No matching events found!\n";
+            cout << "No availiable events found!\n";
         }
     }
     else if (event_type=='S')
@@ -253,11 +379,9 @@ void book_event(char event_type, char& command)
                     int seat_number = 0;
 
                     cout <<"Enter the seat number you want to book:";
-                    cin >> seat_number;
+                    std::cin >> seat_number;
 
                     iterator_->add_ticket(reservee_name, event_name, event_type, seat_number);
-                    cout << "E: exit | B: book another event => ";
-                    cin >> command;
                     return;
                 }
             }
@@ -268,10 +392,29 @@ void book_event(char event_type, char& command)
             cout << "No matching events found!\n";
         }
     }
-    
-    cout << "E: exit | B: book another event => ";
-    cin>>command;
-    
+    else if (command=='F')
+    {
+        Film *iterator_ = film_head;
+
+        while(iterator_!=NULL)
+        {
+            if(iterator_->get_name()==event_name)
+            {
+                if(iterator_->is_available()==true)
+                {
+                    int seat_number = 0;
+
+                    iterator_->add_ticket(reservee_name, event_name, event_type, seat_number);
+                    return;
+                }
+            }
+            iterator_ = iterator_->next;
+        }
+        if(iterator_ == NULL)
+        {
+            cout << "No matching events found!\n";
+        }
+    }
 }
 
 void create_event(char &command)
@@ -282,14 +425,14 @@ void create_event(char &command)
 
     cout << "Enter the following: \n"\
             "Event name: ";
-    cin >> name;
+    std::cin >> name;
     
     if(command=='L')
     {
-        cout << "S: seated | s: standed => ";
-        cin >> allocation;
+        allocation = 's';
 
         LiveMusic *obj = new LiveMusic(name, allocation);
+
         if(live_music_head==NULL)
         {
             live_music_head = obj;
@@ -317,11 +460,29 @@ void create_event(char &command)
         }
 
     }
+    else if(command == 'F')
+    {
+        int dimension;
+        allocation = 'S';
+
+        cout << "Enter 2: 2d film | 3: 3d film";
+        std::cin >> dimension;
+
+        Film *obj = new Film(name, allocation, dimension);
+
+        if(film_head==NULL)
+        {
+            film_head = obj;
+            film_tail = film_head;
+        }
+        else
+        {
+            film_tail->next = obj;
+            film_tail = obj;
+        }
+    }
     
 
-
-    cout << "E: exit | C: create another event => ";
-    cin>>command;
 }
 
 void cancel_book(char &command)
@@ -330,17 +491,22 @@ void cancel_book(char &command)
     char event_type;
 
     cout << "Enter the name of event: ";
-    cin >> event_name;
+    std::cin >> event_name;
 
     cout << "Enter the reservee name: ";
-    cin >> reservee_name;
+    std::cin >> reservee_name;
 
     cout << "Enter the type of event: L: live music | S: stand up comedy | F: film =>  ";
-    cin >> event_type;
+    std::cin >> event_type;
 
-    event_type = event_type_validator(event_type);
 
-    if (command=='L')
+    while(event_type_validator(event_type)==false)
+    {
+        cout << "Enter the type of event: L: live music | S: stand up comedy | F: film =>  ";
+        std::cin >> event_type;
+    }
+
+    if (event_type=='L')
     {
         LiveMusic *iterator_ = live_music_head;
 
@@ -353,15 +519,11 @@ void cancel_book(char &command)
                 if (iterator_->remove_ticket(reservee_name))
                 {
                     cout << "Object deleted!\n";
-                    cout << "E: exit | B: book another event => ";
-                    cin>>command;  
                     return;
                 }
                 else
                 {
                     cout << "The booking object not found!\n";
-                    cout << "E: exit | B: book another event => ";
-                    cin>>command;  
                     return;
                 }
             }
@@ -373,7 +535,7 @@ void cancel_book(char &command)
             cout << "No matching events found!\n";
         }
     }
-    else if (command == 'S')
+    else if (event_type == 'S')
     {
         LiveMusic *iterator_ = live_music_head;
 
@@ -386,15 +548,11 @@ void cancel_book(char &command)
                 if (iterator_->remove_ticket(reservee_name))
                 {
                     cout << "Object deleted!\n";
-                    cout << "E: exit | B: book another event => ";
-                    cin>>command;  
                     return;
                 }
                 else
                 {
                     cout << "The booking object not found!\n";
-                    cout << "E: exit | B: book another event => ";
-                    cin>>command;  
                     return;
                 }
             }
@@ -406,54 +564,69 @@ void cancel_book(char &command)
             cout << "No matching events found!\n";
         }
     }
-    
+    else if (event_type == 'F')
+    {
+        Film *iterator_ = film_head;
 
-    cout << "E: exit | C: cancel another book => ";
-    cin>>command;  
+        while(iterator_!=NULL)
+        {
+
+            if(iterator_->get_name()==event_name)
+            {
+                cout << iterator_->get_name() << "====" << event_name;
+                if (iterator_->remove_ticket(reservee_name))
+                {
+                    cout << "Object deleted!\n";
+                    return;
+                }
+                else
+                {
+                    cout << "The booking object not found!\n";
+                    return;
+                }
+            }
+            iterator_ = iterator_->next;
+        }
+        
+        if(iterator_ == NULL)
+        {
+            cout << "No matching events found!\n";
+        }
+    } 
 }
 
 
 // CLI CONTROLLER
 void cli(){
     char command, event_type;
-    while(command != 'E'){
+    while(command != 'E')
+    {
         cout << "Menu -> \n A: add event \n a: add booking \n C: cancel booking"\
                 "\n L: list all events \n l: get details of an event \n D: load data from file"\
                 "\n S: save data to file \n E: exit.\n";
 
-        cin>>command;
+        std::cin>>command;
 
         if(command == 'A'){
-            while(command != 'E')
-            {
                 cout << "Enter type of event -> \n L: live music | S: stand up comedy | F: film | E: exit =>";
-                cin>>command;
+                std::cin>>command;
                 
-                while(command!='E')
-                    create_event(command);
-                // .......
-            }
+                create_event(command);
+
             command = ' ';
         }
         else if (command ==  'a')
         {
-            while(command != 'E')
-            {
-                cout << "Enter type of event you are going to add a booking -> \n L: live music | S: stand up comedy | F: film | E: exit => ";
-                cin>>event_type;
+            cout << "Enter type of event you are going to add a booking -> \n L: live music | S: stand up comedy | F: film | E: exit => ";
+            std::cin>>event_type;
 
-                while(command!='E')
-                    book_event(event_type, command);
+            book_event(event_type, command);
 
-            }
             command = ' ';
         }
         else if (command == 'C')
         {
-            while(command != 'E')
-            {
-                cancel_book(command);
-            }
+            cancel_book(command);
         }
 
         else if (command == 'L')
@@ -461,11 +634,12 @@ void cli(){
             if(live_music_head != NULL || stand_up_head != NULL ){
                 cout<<live_music_head->list_all(live_music_head);
                 cout<<stand_up_head->list_all(stand_up_head);
+                cout<<film_head->list_all(film_head);
                 pause("");
             }
             else
             {
-                cout << "No Live musics found";
+                cout << "No events found\n";
             }
         }
         else if (command == 'l')
@@ -475,7 +649,7 @@ void cli(){
         else if (command == 'D')
         {
             read_events_data();
-            read_tickets_data();
+            read_tickets_data(); 
         }
         else if (command == 'S')
         {
